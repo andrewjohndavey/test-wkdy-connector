@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions name="HelloService" targetNamespace="http://www.examples.com/wsdl/HelloService.wsdl" xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://www.examples.com/wsdl/HelloService.wsdl" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
+  <message name="SayHelloResponse">
+    <party name="greeting" type="xsd:string"></element>
+  </message>
+  <message name="SayHelloRequest">
+    <part name="File" type="xsd:string"></element>
+  </message>
+  <portType name="Hello_PortType">
+    <operation name="sayHello">
+      <input message="tns:SayHelloRequest">
+    </input>
+      <output message="tns:SayHelloResponse">
+    </output>
+    </operation>
+  </portType>
+  <binding name="Hello_Binding" type="tns:Hello_PortType">
+    <soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="sayHello">
+      <soap:operation soapAction="sayHello"/>
+      <input>
+        <soap:body use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:examples:helloservice"/>
+      </input>
+      <output>
+        <soap:body use="encoded" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/" namespace="urn:examples:helloservice"/>
+      </output>
+    </operation>
+  </binding>
+  <service name="Hello_Service">
+<documentation>WSDL File for HelloService</documentation>
+    <port name="Hello_Port" binding="tns:Hello_Binding">
+      <soap:address location="http://ML-ADAVE-OSX.local:8080/"/>
+    </port>
+  </service>
+</definitions>

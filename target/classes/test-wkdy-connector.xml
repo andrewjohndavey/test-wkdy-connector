@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ws="http://www.mulesoft.org/schema/mule/ws" xmlns:metadata="http://www.mulesoft.org/schema/mule/metadata" xmlns:dw="http://www.mulesoft.org/schema/mule/ee/dw" xmlns:json="http://www.mulesoft.org/schema/mule/json" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:wd-connector="http://www.mulesoft.org/schema/mule/wd-connector" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/wd-connector http://www.mulesoft.org/schema/mule/wd-connector/current/mule-wd-connector.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee/dw/current/dw.xsd
+http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
+http://www.mulesoft.org/schema/mule/ws http://www.mulesoft.org/schema/mule/ws/current/mule-ws.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+    <wd-connector:config name="Workday__Basic" username="seteam" password="Anypoint1357!" tenantName="mulesoft_pt1" hostName="wd2-impl-services1.workday.com" testConnectivtyService="Human_Resources" doc:name="Workday: Basic"/>
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="8081" doc:name="HTTP Listener Configuration"/>
+    <ws:consumer-config name="Web_Service_Consumer1" service="PayRollService" port="PayRollServicePort" serviceAddress="http://localhost:8080/mockPayRollServiceSoapBinding" wsdlLocation="delta.wsdl" doc:name="Web Service Consumer"/>
+    <flow name="test-wkdy-connectorFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/getworkers" doc:name="HTTP"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 urn:com.workday/bsvc
+---
+{
+	ns0#Get_Workers_Request: {
+		ns0#Request_Criteria: {
+			ns0#Exclude_Inactive_Workers: true
+		},
+		ns0#Response_Filter: {
+			ns0#Count: 5
+		}
+	}
+}
+]]></dw:set-payload>
+        </dw:transform-message>
+        <wd-connector:invoke config-ref="Workday__Basic" type="Human_Resources||Get_Workers" doc:name="Workday"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/json
+%namespace ns0 urn:com.workday/bsvc
+---
+payload.ns0#Get_Workers_Response.ns0#Response_Data.*ns0#Worker.ns0#Worker_Data.ns0#Personal_Data.ns0#Name_Data.ns0#Legal_Name_Data.ns0#Name_Detail_Data map {
+	First_Name: $.ns0#First_Name,
+	Last_Name: $.ns0#Last_Name
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:input-payload doc:sample="sample_data/list_json_2.json"/>
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 http://soap.training.mulesoft.com/
+---
+{
+	ns0#SendPayRollUpdate: {
+		FirstName: payload.First_Name[0],
+		LastName: payload.Last_Name[0],
+		FirstInitial: payload.Last_Name[0][0],
+		Gender: "M"
+	}
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <byte-array-to-string-transformer doc:name="Byte Array to String"/>
+        <logger message="#[payload] " level="INFO" doc:name="Logger"/>
+        <ws:consumer config-ref="Web_Service_Consumer1" operation="SendPayRollUpdate" doc:name="Web Service Consumer"/>
+    </flow>
+    <flow name="test-wkdy-connectorFlow1">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/getworkerscsv" doc:name="HTTP"/>
+        <set-variable variableName="StrangList" value="ABCDEFGHIJ" doc:name="StrangeList"/>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Transform Message">
+            <dw:set-variable variableName="StrangList"><![CDATA[%dw 1.0
+%output application/java
+---
+
+flowVars.StrangList replace "ABC" with "ZZZ"]]></dw:set-variable>
+        </dw:transform-message>
+        <logger message="#[payload]" level="INFO" doc:name="Logger"/>
+        <dw:transform-message doc:name="Set Workday Inputs">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/xml
+%namespace ns0 urn:com.workday/bsvc
+---
+
+		ns0#Request_Criteria: 
+		
+		ns0#Response_Filter: {
+			ns0#Count: 5
+		}
+	]]></dw:set-payload>
+        </dw:transform-message>
+        <wd-connector:invoke config-ref="Workday__Basic" type="Human_Resources||Get_Workers" doc:name="Copy_of_Workday"/>
+        <dw:transform-message doc:name="Transform to csv">
+            <dw:set-payload><![CDATA[%dw 1.0
+%output application/csv
+%namespace ns0 urn:com.workday/bsvc
+---
+payload.ns0#Get_Workers_Response.ns0#Response_Data.*ns0#Worker.ns0#Worker_Data.ns0#Personal_Data.ns0#Name_Data.ns0#Legal_Name_Data.ns0#Name_Detail_Data map {
+	First_Name: $.ns0#First_Name,
+	Last_Name: $.ns0#Last_Name
+}]]></dw:set-payload>
+        </dw:transform-message>
+        <file:outbound-endpoint path="/Users/andrewdavey/AnypointStudio/workspace/test-wkdy-connector/src/main/resources/out" outputPattern="csv" responseTimeout="10000" doc:name="File"/>
+    </flow>
+</mule>

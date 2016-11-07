@@ -1,0 +1,66 @@
+<?xml version='1.0' encoding='UTF-8'?><wsdl:definitions xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="http://soap.training.mulesoft.com/" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:ns1="http://schemas.xmlsoap.org/soap/http" name="UploadServiceService" targetNamespace="http://soap.training.mulesoft.com/">
+  <wsdl:types>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:tns="http://soap.training.mulesoft.com/" elementFormDefault="unqualified" targetNamespace="http://soap.training.mulesoft.com/" version="1.0">
+
+
+  <xs:element name="UploadPeople" type="tns:UploadPeople"/>
+
+  <xs:element name="UploadPeopleResponse" type="tns:UploadPeopleResponse"/>
+
+  <xs:complexType name="UploadPeople">
+    <xs:sequence/>
+  </xs:complexType>
+
+  <xs:complexType name="UploadPeopleResponse">
+    <xs:sequence>
+      <xs:element maxOccurs="unbounded" minOccurs="0" name="return" type="tns:person"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:complexType name="person">
+    <xs:sequence>
+      <xs:element minOccurs="0" name="FirstName" type="xs:string"/>
+      <xs:element minOccurs="0" name="LastName" type="xs:string"/>
+      <xs:element minOccurs="0" name="DOB" type="xs:string"/>
+      <xs:element minOccurs="0" name="Gender" type="xs:string"/>
+    </xs:sequence>
+  </xs:complexType>
+
+
+</xs:schema>
+  </wsdl:types>
+  <wsdl:message name="UploadPeopleResponse">
+    <wsdl:part element="tns:UploadPeopleResponse" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:message name="UploadPeople">
+    <wsdl:part element="tns:UploadPeople" name="parameters">
+    </wsdl:part>
+  </wsdl:message>
+  <wsdl:portType name="UploadService">
+    <wsdl:operation name="UploadPeople">
+      <wsdl:input message="tns:UploadPeople" name="UploadPeople">
+    </wsdl:input>
+      <wsdl:output message="tns:UploadPeopleResponse" name="UploadPeopleResponse">
+    </wsdl:output>
+    </wsdl:operation>
+    </wsdl:operation>
+  </wsdl:portType>
+  <wsdl:binding name="UploadServiceServiceSoapBinding" type="tns:UploadService">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <wsdl:operation name="UploadPeople">
+      <soap:operation soapAction="" style="document"/>
+      <wsdl:input name="UploadPeople">
+        <soap:body use="literal"/>
+      </wsdl:input>
+      <wsdl:output name="UploadPeopleResponse">
+        <soap:body use="literal"/>
+      </wsdl:output>
+    </wsdl:operation>
+  </wsdl:binding>
+  <wsdl:service name="UploadServiceService">
+    <wsdl:port binding="tns:UploadServiceServiceSoapBinding" name="UploadServicePort">
+      <soap:address location="http://training-u.cloudhub.io/essentials/delta"/>
+    </wsdl:port>
+  </wsdl:service>
+</wsdl:definitions>
